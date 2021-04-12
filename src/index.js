@@ -42,21 +42,25 @@ function checksTodoExists(request, response, next) {
   const { username } = request.headers;
   const { id } = request.params;
 
-  const user = users.find((user) => user.username === username);
-  const todo = user.todos.find((todo) => todo.id === id);
-  const validId = validate(todo.id);
+  const user  = users.find((user) => user.username === username);
+  const validId = validate(id);
 
-  
+  if (!validId) {
+    return response.status(400);
+  }
 
-  if ( user === undefined || todo === false) {
-      return response.status(404).json({error: 'Não encontrado'});
-  } 
-
-  request.user = user;
-  request.todo = todo; 
-
-  return next();
-
+  if (user && user.todos.find((todo) => todo.id === id)) {
+      user.todos.forEach(todo => {
+      if (todo.id === id) {      
+        request.user = user;
+        request.todo = todo; 
+      
+        return next();
+      }
+    });
+  } else {
+      return response.status(404).json({error : 'Tarefa inexistente'});
+  }
 }
 
 function findUserById(request, response, next) {
